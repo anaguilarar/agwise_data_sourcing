@@ -2,67 +2,7 @@ import ee
 
 import pandas as pd
 import matplotlib.pyplot as plt
-
-def fill_gaps_linear(collection, band):
-    # Sort collection by time
-    collection = collection.sort('system:time_start')
-
-    def interp(img):
-        prev = collection.filterDate(
-            ee.Date(img.get('system:time_start')).advance(-32, 'day'),
-            ee.Date(img.get('system:time_start'))
-        ).limit(1, 'system:time_start', False)
-
-        next_ = collection.filterDate(
-            ee.Date(img.get('system:time_start')),
-            ee.Date(img.get('system:time_start')).advance(32, 'day')
-        ).limit(1)
-
-        prev_val = ee.Image(prev.first()).select(band)
-        next_val = ee.Image(next_.first()).select(band)
-
-        # Interpolation fraction
-        t = ee.Image(img).date().millis()
-        t0 = ee.Number(prev.first().get('system:time_start'))
-        t1 = ee.Number(next_.first().get('system:time_start'))
-
-        frac = t.subtract(t0).divide(t1.subtract(t0))
-
-        interp_val = prev_val.add(next_val.subtract(prev_val).multiply(frac))
-        return img.addBands(interp_val.rename(band + '_interp'), overwrite=True)
-
-    return collection.map(interp)
-
-def moving_average(collection, band, window=3):
-    # Must be odd
-    half = (window - 1) // 2
-
-    def smooth(img):
-        date = ee.Date(img.get('system:time_start'))
-        start = date.advance(-16 * half, 'day')
-        end = date.advance(16 * half, 'day')
-
-        neigh = collection.filterDate(start, end).select(band)
-        mean = neigh.mean().rename(band + '_smoothed')
-        return img.addBands(mean, overwrite=True)
-
-    return collection.map(smooth)
-
-def summarize_collection_tots(image, roi, band, scale = 250):
-
-  reduced_value = image.select(band).reduceRegion(
-      reducer=ee.Reducer.mean(),
-      geometry=roi.geometry(),
-      scale=scale,
-      maxPixels = 1e13
-  )
-
-  return ee.Feature(None, {
-      'date': image.date().format(),
-      band: reduced_value.get(band)
-  })
-
-
+from .processing_funs import summarize_collection_tots
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -124,6 +64,8 @@ class GEECropMask(GEEDataDownloader):
     self.query = self.query.filterBounds(self.country_filter)
     return self.query
 
+  def download_data(self):
+    pass
 
 class GEEMODIS(GEEDataDownloader):
   @staticmethod

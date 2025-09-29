@@ -1,3 +1,79 @@
+import ee
+
+def moving_average(collection, band, window=3):
+    # Must be odd
+    half = (window - 1) // 2
+
+    def smooth(img):
+        date = ee.Date(img.get('system:time_start'))
+        start = date.advance(-16 * half, 'day')
+        end = date.advance(16 * half, 'day')
+
+        neigh = collection.filterDate(start, end).select(band)
+        mean = neigh.mean().rename(band + '_smoothed')
+        return img.addBands(mean, overwrite=True)
+
+    return collection.map(smooth)
+
+def summarize_collection_tots(image, roi, band, scale = 250):
+
+    reduced_value = image.select(band).reduceRegion(
+        reducer=ee.Reducer.mean(),
+        geometry=roi.geometry(),
+        scale=scale,
+        maxPixels = 1e13
+    )
+
+    return ee.Feature(None, {
+        'date': image.date().format(),
+        band: reduced_value.get(band)
+    })
+
+
+
+def fill_gaps_linear(collection, band):
+    # Sort collection by time
+    collection = collection.sort('system:time_start')
+
+    def interp(img):
+        img_date = ee.Date(img.get('system:time_start'))
+
+        prev = collection.filterDate(
+            ee.Date(img.get('system:time_start')).advance(-32, 'day'),
+            img_date
+        ).limit(1, 'system:time_start', False)
+
+        next_ = collection.filterDate(
+            img_date,
+            ee.Date(img.get('system:time_start')).advance(32, 'day')
+        ).limit(1)
+
+        prev_img = ee.Image(ee.Algorithms.If(prev.size().gt(0), prev.first(), img))
+        next_img = ee.Image(ee.Algorithms.If(next_.size().gt(0), next_.first(), img))
+
+        prev_val = prev_img.select(band)
+        next_val = next_img.select(band)
+
+        # Interpolation fraction
+        t = img_date.millis()
+        t0 = ee.Number(prev_img.get('system:time_start'))
+        t1 = ee.Number(next_img.get('system:time_start'))
+
+        # Avoid division by zero
+        frac = ee.Number(
+                ee.Algorithms.If(
+                    t1.neq(t0),
+                    t.subtract(t0).divide(t1.subtract(t0)),
+                    0
+                )
+            )
+
+        interp_val = prev_val.add(next_val.subtract(prev_val).multiply(frac))
+        return img.addBands(interp_val.rename(band), overwrite=True)
+
+    return collection.map(interp)
+
+
 def smooth_ts_using_savitsky_golay_modis(
     img_collection,
     band = 'NDVI',
