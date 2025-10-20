@@ -2,7 +2,7 @@ import ee
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from .processing_funs import summarize_collection_tots
+from .processing_funs import summarize_collection_tots, fill_gaps_linear, smooth_ts_using_savitsky_golay_modis
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -150,5 +150,40 @@ class GEEMODIS(GEEDataDownloader):
 
     return df
 
+  def get_adm_timeseries(self, adm_level = None, feature_name = None, band = 'NDVI', fill_gaps = True, sg = True, **kwargs):
+    if adm_level is not None and feature_name is not None:
+      dataset = ee.FeatureCollection(self._global_adiminstrative_data.format(adm_level=adm_level))
+      adm_filter = dataset.filter(ee.Filter.eq('shapeName', feature_name.lower().title()))
+      print(f'data will be processed for: {feature_name}')
+      query = self.query.filterBounds(adm_filter)
+      
+    else:
+      query = self.query
+      adm_filter = self.country_filter
+      print('data will be processed at country level')
+      
+    if fill_gaps: query = fill_gaps_linear(query, band)
+      
+    if sg:
+      query = smooth_ts_using_savitsky_golay_modis(query.select(band), **kwargs)
+      band = band  + '_smooth'
+      
+    time_series_features = query.map(lambda image: summarize_collection_tots(image, adm_filter, band))
+    
+    features = time_series_features.getInfo()['features']
+    
+    df = pd.DataFrame([
+        {
+            'date': f['properties']['date'],
+            band: f['properties'][band]
+        }
+        for f in features if f['properties'][band] is not None
+    ])
+
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+    
+    return df
+    
   def download_data(self):
     pass
