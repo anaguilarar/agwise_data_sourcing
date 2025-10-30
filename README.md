@@ -1,10 +1,11 @@
-# Ag-Wise Data Sourcing: MODIS/VIIRS Time Series Downloader
+# Ag-Wise Data Sourcing: MODIS/VIIRS Time Series and SoilGrids Downloader 
 
 ## Overview
 
 This repository provides a Python-based toolkit for downloading, processing, and visualizing vegetation index (VI) time series data from MODIS and VIIRS satellite imagery using the Google Earth Engine (GEE) platform. It is designed to facilitate the acquisition of analysis-ready data for agricultural applications, such as crop monitoring and yield estimation.
 
-The main functionalities are demonstrated in the `GEEMODIS_data_download.ipynb` Jupyter Notebook.
+* MODIS/VIIRS: The main functionalities are demonstrated in the `GEEMODIS_data_download.ipynb` Jupyter Notebook.
+* SoilGrids: The main functionalities are demonstrated in the `GEESoilGrids_data_download.ipynb` Jupyter Notebook.
 
 ## Features
 
