@@ -6,6 +6,7 @@ from .processing_funs import summarize_collection_tots, fill_gaps_linear, smooth
 from abc import ABC, abstractmethod
 from datetime import datetime
 
+from typing import List
 class GEEDataDownloader(ABC):
   @abstractmethod
   def list_of_products(self):
@@ -19,6 +20,65 @@ class GEEDataDownloader(ABC):
   def download_data(self):
     pass
 
+
+class GEESoilGrids(GEEDataDownloader):
+  def __init__(self, country) -> None:
+      
+        self.country = country.lower()
+        self._global_adiminstrative_data = 'WM/geoLab/geoBoundaries/600/{adm_level}'
+
+        
+        dataset = ee.FeatureCollection(self._global_adiminstrative_data.format(adm_level='ADM0'))
+        self.country_filter = dataset.filter(ee.Filter.eq('shapeName', self.country.title()))
+
+        count = self.country_filter.size().getInfo()
+        assert count == 1, f'No info for {self.country.title()}'
+        
+  @property
+  def list_of_products(self):
+    return {
+        'bdod': "projects/soilgrids-isric/bdod_mean",
+        'cec': "projects/soilgrids-isric/cec_mean",
+        'cfvo': "projects/soilgrids-isric/cfvo_mean",
+        'clay': "projects/soilgrids-isric/clay_mean",
+        'sand': "projects/soilgrids-isric/sand_mean",
+        'silt': "projects/soilgrids-isric/silt_mean",
+        'nitrogen': "projects/soilgrids-isric/nitrogen_mean",
+        'soc': "projects/soilgrids-isric/soc_mean",
+        'phh2o': "projects/soilgrids-isric/phh2o_mean",
+        'wv0010': "ISRIC/SoilGrids250m/v2_0/wv0010",
+        'wv0033': "ISRIC/SoilGrids250m/v2_0/wv0033",
+        'wv1500': "ISRIC/SoilGrids250m/v2_0/wv1500" 
+    }
+
+
+  def initialize_query(self, soil_property: str = None, depths: List[str] = None):
+    """
+    function to inisitalize the query
+    """
+        
+    assert soil_property in self.list_of_products, 'Product not available'
+
+    self.query = ee.Image(self.list_of_products[soil_property])#.first()
+
+    self.query = self.query.clip(self.country_filter)
+        
+    return self.query
+  
+  def download_data(self):
+    pass
+  
+  def get_adm_level_data(self, adm_level = None, feature_name = None):
+    if adm_level is not None and feature_name is not None:
+      dataset = ee.FeatureCollection(self._global_adiminstrative_data.format(adm_level=adm_level))
+      adm_filter = dataset.filter(ee.Filter.eq('shapeName', feature_name.lower().title()))
+      print(f'data will be processed for: {feature_name}')
+      return self.query.clip(adm_filter)
+    else:
+      return self.query
+    
+      
+  
 
 class GEECropMask(GEEDataDownloader):
   @property
