@@ -25,6 +25,7 @@ class GEESoilGrids(GEEDataDownloader):
   def __init__(self, country) -> None:
       
         self.country = country.lower()
+        self._adm_filter = None
         self._global_adiminstrative_data = 'WM/geoLab/geoBoundaries/600/{adm_level}'
 
         
@@ -73,6 +74,7 @@ class GEESoilGrids(GEEDataDownloader):
       dataset = ee.FeatureCollection(self._global_adiminstrative_data.format(adm_level=adm_level))
       adm_filter = dataset.filter(ee.Filter.eq('shapeName', feature_name.lower().title()))
       print(f'data will be processed for: {feature_name}')
+      self._adm_filter = adm_filter
       return self.query.clip(adm_filter)
     else:
       return self.query
