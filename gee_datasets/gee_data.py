@@ -6,6 +6,8 @@ from .processing_funs import summarize_collection_tots, fill_gaps_linear, smooth
 from abc import ABC, abstractmethod
 from datetime import datetime
 
+import os
+import requests
 from typing import List
 class GEEDataDownloader(ABC):
   @abstractmethod
@@ -17,7 +19,7 @@ class GEEDataDownloader(ABC):
     pass
 
   @abstractmethod
-  def download_data(self):
+  def download_data(self, **kwargs):
     pass
 
 
@@ -66,8 +68,34 @@ class GEESoilGrids(GEEDataDownloader):
         
     return self.query
   
-  def download_data(self):
-    pass
+  def download_data(self, soil_image, output_fn,  scale = 250):
+    soil_image = soil_image.reproject(crs="EPSG:4326", scale=scale)
+    url = soil_image.getDownloadURL({
+      'scale': scale,
+      'region': self._adm_filter.geometry(),
+      'format': 'GEO_TIFF',
+    })
+    
+    #fn = os.path.dirname(output_fn)
+    response = requests.get(url)
+    with open(output_fn, 'wb') as f:
+      f.write(response.content)
+      
+  def download_multiple_properties(self, output_dir, soil_properties = None, adm_level = None, feature_name = None, scale = 250):
+    if soil_properties is None: soil_properties = self.list_of_products.keys()
+    
+    for soil_property in soil_properties:
+      self.initialize_query(soil_property)
+      if feature_name is not None:
+        soil_image = self.get_adm_level_data(adm_level=adm_level, feature_name = feature_name)
+      else:
+        soil_image = self.query
+        
+      fn = os.path.join(output_dir, soil_property + '.tif')
+      if not os.path.exists(output_dir): os.mkdir(output_dir)
+      
+      self.download_data(soil_image, fn, scale = scale)
+      print(f'{soil_property}: data was downloaded in {fn}')
   
   def get_adm_level_data(self, adm_level = None, feature_name = None):
     if adm_level is not None and feature_name is not None:
@@ -247,5 +275,37 @@ class GEEMODIS(GEEDataDownloader):
     
     return df
     
-  def download_data(self):
-    pass
+  def download_data(self, soil_image, output_fn,  scale = 250):
+    
+    soil_image = soil_image.reproject(crs="EPSG:4326", scale=scale)
+    url = soil_image.getDownloadURL({
+      'scale': scale,
+      'region': self._adm_filter.geometry(),
+      'format': 'GEO_TIFF',
+    })
+    
+    #fn = os.path.dirname(output_fn)
+    response = requests.get(url)
+    with open(os.path.dirname(output_fn), 'wb') as f:
+      f.write(response.content)
+      
+  def download_multiple_properties(self, output_dir, soil_properties = None, adm_level = None, feature_name = None, scale = 250):
+    if soil_properties is None: soil_properties = self.list_of_products.keys()
+    
+    for soil_property in soil_properties:
+      self.initialize_query(soil_property)
+      if feature_name is not None:
+        soil_image = self.get_adm_level_data(adm_level=adm_level, feature_name = feature_name)
+      else:
+        soil_image = self.query
+        
+      fn = os.path.join(output_dir, soil_property + '.tif')
+      if not os.path.exists(output_dir): os.mkdir(output_dir)
+      
+      self.download_data(soil_image, fn, scale = scale)
+      print(f'{soil_property}: data was downloaded in {fn}')
+      
+      
+      
+
+    
