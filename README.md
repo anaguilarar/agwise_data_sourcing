@@ -22,6 +22,7 @@ This repository provides a Python-based toolkit for downloading, processing, and
 ```
 .
 ├── GEEMODIS_data_download.ipynb
+├── GEESoilGrids_data_download.ipynb
 ├── README.md
 ├── gee_datasets
 │   ├── __init__.py
@@ -31,8 +32,9 @@ This repository provides a Python-based toolkit for downloading, processing, and
     └── plots.py
 ```
 
-*   `GEEMODIS_data_download.ipynb`: A Jupyter Notebook explaining how to use the tools in this repository.
-*   `gee_datasets/gee_data.py`: Contains the core classes (`GEEMODIS`, `GEECropMask`) for interacting with Google Earth Engine and downloading data.
+*   `GEEMODIS_data_download.ipynb`: A Jupyter Notebook explaining how to use the tools for downloading MODIS/VIIRS data.
+*   `GEESoilGrids_data_download.ipynb`: A Jupyter Notebook explaining how to use the tools for downloading SoilGrids data.
+*   `gee_datasets/gee_data.py`: Contains the core classes (`GEEMODIS`, `GEESoilGrids`, `GEECropMask`) for interacting with Google Earth Engine and downloading data.
 *   `gee_datasets/processing_funs.py`: Includes functions for time series processing, such as gap filling and smoothing.
 *   `utils/plots.py`: Provides helper functions for plotting the time series data.
 
