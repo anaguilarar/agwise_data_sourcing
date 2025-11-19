@@ -1,6 +1,7 @@
 from gee_datasets.soil import GEESoilGrids
 import ee
 import os
+import sys
 
 import yaml
 import xarray
@@ -66,12 +67,21 @@ def main(config_path):
     
     assert os.path.exists(config_path), "the path does not exist"
     
+
     print(f'-------> Starting: ', config_path)
     
     with open(config_path, 'r') as file:
         config_dict = yaml.safe_load(file)
 
-    ee.Initialize(config_dict['GENERAL_SETTINGS']['ee_project_name'])
+    cm_path = config_dict['GENERAL_SETTINGS'].get('dssat_processor_path', None)
+    if cm_path is None:
+        path = os.path.abspath(os.path.join(os.getcwd(),'/WeatherSoilDataProcessor'))
+    else:
+        path = os.path.abspath(os.path.join(cm_path,'/WeatherSoilDataProcessor'))
+    
+    sys.path.append(path)
+
+    ee.Initialize(project = config_dict['GENERAL_SETTINGS']['ee_project_name'])
     
     data_downloader = GEESoilGrids(config_dict['DATA_DOWNLOAD']['ADM0_NAME'])
 
@@ -84,10 +94,10 @@ def main(config_path):
                 adm_level = config_dict['DATA_DOWNLOAD']['adm_level'], 
                 locality_name = config_dict['DATA_DOWNLOAD'][f'{adm_level}_NAME'],
                 depths = config_dict['DATA_DOWNLOAD']['depths'], 
-                scale = 250 )
+                scale = config_dict['DATA_DOWNLOAD']['scale'])
         
     if config_dict['GENERAL_SETTINGS']['donwnload_coordinatedata_asdssat']:
-        
+        if not os.path.exists(config_dict['GENERAL_SETTINGS']['output_path']): os.makedirs(config_dict['GENERAL_SETTINGS']['output_path'])
         export_dssat_table(data_downloader, 
                         coordinate = config_dict['DATA_DOWNLOAD']['coordinate'], 
                         soil_properties = config_dict['DSSAT_process']['soil_properties'], 
@@ -98,7 +108,21 @@ def main(config_path):
                         site = 'AFR')
                     
 if __name__ == '__main__':
-    main()
+    print('''\
+      
+      ==============================================
+      |                                            |
+      |           AGWISE DATA SOURCING             |    
+      |               GEESOILData                  |
+      |              Crop Modeling                 |
+      ==============================================      
+      ''')
+
+    args = sys.argv[1:]
+    config = args[args.index("-config") + 1] if "-config" in args and len(args) > args.index("-config") + 1 else None
+    print(config)    
+    main(config)
+
 
 
     
