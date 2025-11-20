@@ -1,4 +1,6 @@
 from gee_datasets.soil import GEESoilGrids
+from pathlib import Path
+
 import ee
 import os
 import sys
@@ -94,12 +96,16 @@ def main(config_path):
     with open(config_path, 'r') as file:
         config_dict = yaml.safe_load(file)
 
-    cm_path = config_dict['GENERAL_SETTINGS'].get('dssat_processor_path', None)
+    
+    cm_path = Path(config_dict['DSSAT_process'].get('dssat_processor_path', None))
+
     if cm_path is None:
         path = os.path.abspath(os.path.join(os.getcwd(),'/WeatherSoilDataProcessor'))
     else:
-        path = os.path.abspath(os.path.join(cm_path,'/WeatherSoilDataProcessor'))
+        path = os.path.abspath(cm_path / Path('WeatherSoilDataProcessor'))
     
+    print('dssat processor path: ', path)
+    assert os.path.exists(path), "the dssat processor path does not exist"
     sys.path.append(path)
 
     ee.Initialize(project = config_dict['GENERAL_SETTINGS']['ee_project_name'])
