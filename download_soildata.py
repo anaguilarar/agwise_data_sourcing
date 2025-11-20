@@ -4,6 +4,7 @@ import os
 import sys
 
 import yaml
+import numpy as np
 import xarray
 import rioxarray as rio
 
@@ -56,12 +57,32 @@ def export_data_cube(data_downloader, output_path, soil_properties, adm_level, l
 
         xrdata_list.append(xrdata)
 
-    xrdata = xarray.merge(xrdata_list)
+    soilm = xarray.merge(xrdata_list).assign_coords({'depth': np.array([i.replace('_', '-') for i in depths])})
     
-    xrdata.to_netcdf(output_path)
+    soilm.to_netcdf(output_path)
     
-    return xrdata
+    return soilm
 
+def export_individual_pixelasdssatformat(soilm, idpx, xcoord, ycoord, soil_id, output_path, locality_name):
+    
+    from crop_modeling.dssat.files_export import from_soil_to_dssat
+    
+    dfdata = soilm.sel(x = xcoord, y = ycoord, method = 'nearest').to_dataframe().reset_index().dropna()
+    if all(dfdata.wv0010<-32000):
+        dfdata = dfdata.drop(columns='wv0010')
+    if all(dfdata.wv0033<-32000):
+        dfdata = dfdata.drop(columns='wv0033')
+    if all(dfdata.wv1500<-32000):
+        dfdata = dfdata.drop(columns='wv1500')
+    
+    from_soil_to_dssat(dfdata, depth_name= 'depth',
+                                        outputpath= output_path, 
+                                        outputfn='SOL', 
+                                        country = 'Kenya'.upper(),
+                                        site = locality_name, 
+                                        soil_id=soil_id, 
+                                        sub_working_path = str(idpx), verbose = False) 
+    
 
 def main(config_path):
     
@@ -87,14 +108,28 @@ def main(config_path):
 
     
     if config_dict['GENERAL_SETTINGS']['donwnload_data_cube']:
+        
         adm_level = config_dict['DATA_DOWNLOAD']['adm_level']
-        export_data_cube(data_downloader, 
+        ouput_path = os.path.join(config_dict['GENERAL_SETTINGS']['output_path'], config_dict['DATA_DOWNLOAD']['ADM1_NAME'])
+        if not os.path.exists(ouput_path): os.makedirs(ouput_path)
+        
+        xrdata = export_data_cube(data_downloader, 
                 config_dict['DATA_DOWNLOAD']['output_path'], 
                 config_dict['DATA_DOWNLOAD']['properties'], 
                 adm_level = config_dict['DATA_DOWNLOAD']['adm_level'], 
                 locality_name = config_dict['DATA_DOWNLOAD'][f'{adm_level}_NAME'],
                 depths = config_dict['DATA_DOWNLOAD']['depths'], 
                 scale = config_dict['DATA_DOWNLOAD']['scale'])
+        
+        
+        xrref = xrdata.isel(depth = 0)
+
+        xrmask = xrref.notnull()[list(xrdata.data_vars)[0]]
+        xgrid, ygrid = np.meshgrid(xrref.x,xrref.y)
+        xgrid = np.where(xrmask.values,xgrid,np.nan).flatten()
+        ygrid = np.where(xrmask.values,ygrid,np.nan).flatten()
+        pxswithdata = np.where(~np.isnan(ygrid))[0]
+        
         
     if config_dict['GENERAL_SETTINGS']['donwnload_coordinatedata_asdssat']:
         if not os.path.exists(config_dict['GENERAL_SETTINGS']['output_path']): os.makedirs(config_dict['GENERAL_SETTINGS']['output_path'])
