@@ -1,0 +1,24 @@
+GENERAL_SETTINGS:
+  ee_project_name: ee-anaguilarar
+  donwnload_data_cube: False
+  donwnload_coordinatedata_asdssat: True
+  output_path: runs
+
+DATA_DOWNLOAD:
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kericho
+  ADM2_NAME: null 
+  property: sand
+  properties: ['bdod', 'cec', 'cfvo', 'clay', 'sand', 'silt', 'nitrogen', 'soc', 'phh2o', 'wv0010', 'wv0033', 'wv1500']
+  depths: ['0_5', '5_15', '15_30', '30_60', '60_100', '100_200']
+  coordinate: [37.8, -1.4]
+  output_path: soil.nc
+  adm_level: 'ADM1'
+  scale: 250
+
+DSSAT_process:
+  soil_properties: ['bdod', 'cec', 'cfvo', 'clay', 'sand', 'silt', 'nitrogen', 'soc', 'phh2o', 'wv0010', 'wv0033', 'wv1500']
+  soil_id: 'TRAN00001'
+  output_fn: 'SOL'
+  dssat_processor_path: 'D:/OneDrive - CGIAR/scripts/'
+  
