@@ -30,7 +30,7 @@ class GEESoilGrids(GEEDataDownloader):
         if soil_property in ['wv0010', 'wv0033', 'wv1500']:
             depth = k[len('val')+1:k.index('cm')].replace('_','-')
         elif soil_property in ['calcium', 'phosphorus', 'potassium']:
-          depth = k[len('mean')+1:].replace('_','-')
+            depth = k[len('mean')+1:].replace('_','-')
         else:
             depth = k[len(soil_property)+1:k.index('cm')].replace('_','-')
         df = pd.DataFrame({'depth': [depth], soil_property: [v], 'x': [point_coordinate[0]], 'y': [point_coordinate[1]]})
