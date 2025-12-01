@@ -1,0 +1,15 @@
+GENERAL_SETTINGS:
+  ee_project_name: ee-anaguilarar
+  donwnload_as_raster: True
+  donwnload_coordinatedata: False
+  output_path: runs
+
+
+DATA_DOWNLOAD:
+  source: nasadem
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kisumu
+  coordinate: [37.8, -1]
+  adm_level: 'ADM1'
+  scale: 250
+
