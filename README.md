@@ -54,6 +54,74 @@ The tools are intended for researchers who require analysis-ready geospatial dat
 *   **Visualization**: Plot raw and processed time series data, and visualize masked data on an interactive map using `geemap`.
 
 
+
+## Usage example using Command-Line (for Automation)
+
+There are examples that uses CLI and YAML files for setting configurations. These examples can be executed through the terminal.
+
+*   **SoilGrids Download**
+
+YAML configuration file:
+
+``` Yaml
+GENERAL_SETTINGS:
+  ee_project_name: ee-anaguilarar
+  donwnload_data_cube: False
+  donwnload_coordinatedata_asdssat: False
+  output_path: runs
+  donwnload_area_asdssat: True
+
+DATA_DOWNLOAD:
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kericho
+  ADM2_NAME: null
+  property: sand
+  properties: ['bdod', 'cec', 'cfvo', 'clay', 'sand', 'silt', 'nitrogen', 'soc', 'phh2o', 'wv0010', 'wv0033', 'wv1500']
+  depths: ['0_5', '5_15', '15_30', '30_60', '60_100', '100_200']
+  coordinate: [37.8, -1.4]
+  output_path: soil.nc
+  adm_level: 'ADM1'
+  scale: 250
+  n_workers: 5
+
+DSSAT_process:
+  soil_properties: ['bdod', 'cec', 'cfvo', 'clay', 'sand', 'silt', 'nitrogen', 'soc', 'phh2o', 'wv0010', 'wv0033', 'wv1500']
+  soil_id: 'TRAN00001'
+  output_fn: 'SOL'
+  dssat_processor_path: 'D:/OneDrive - CGIAR/scripts/'
+
+```
+Run from terminal
+
+``` Bash
+python download_soildata.py -config yaml_configurations/soil_data_download.yaml
+```
+
+*   **DEM Download**
+
+YAML configuration file:
+
+``` Yaml
+GENERAL_SETTINGS:
+  ee_project_name: ee-anaguilarar
+  donwnload_as_raster: True
+  donwnload_coordinatedata: False
+  output_path: runs
+
+DATA_DOWNLOAD:
+  source: nasadem
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kisumu
+  coordinate: [37.8, -1]
+  adm_level: 'ADM1'
+  scale: 250
+```
+Run from terminal
+
+``` Bash
+python download_dem.py -config yaml_configurations/dem_data_download.yaml
+```
+
 ## Dependencies
 
 This project requires the following Python libraries:
