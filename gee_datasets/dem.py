@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import Dict, List, Optional, Tuple
 
 import ee
 import pandas as pd
@@ -8,6 +8,26 @@ import requests
 from .gee_data import GEEDataDownloader
 
 class GEEdem(GEEDataDownloader):
+    """
+    Google Earth Engine (GEE) downloader for DEM-based terrain products.
+    
+    Parameters
+    ----------
+    country : str
+        Name of the country to extract administrative boundaries from.
+    
+    Attributes
+    ----------
+    country : str
+        Lowercase country name.
+    country_filter : ee.FeatureCollection
+        FeatureCollection containing the ADM0 boundary for the country.
+    query : ee.Image
+        DEM image containing elevation, slope, aspect, and TPI bands.
+    _adm_filter : ee.FeatureCollection or None
+        Optional administrative area subset for export operations.
+    """
+    
     def __init__(self, country) -> None:
     
         self.country = country.lower()
@@ -23,7 +43,28 @@ class GEEdem(GEEDataDownloader):
 
     
     @staticmethod  
-    def extract_data_using_coordinate(image, point_coordinate, scale = 250):
+    def extract_data_using_coordinate(
+        image: ee.Image,
+        point_coordinate: Tuple[float, float],
+        scale: int = 250
+        ) -> pd.DataFrame:
+        """
+        Extract DEM-derived values at a specific coordinate.
+
+        Parameters
+        ----------
+        image : ee.Image
+            Image containing DEM values.
+        point_coordinate : tuple(float, float)
+            (longitude, latitude) coordinate pair.
+        scale : int, optional
+            Sampling resolution in meters. Default is 250.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame containing band name, value, and point geometry.
+        """
         ee_point = ee.Geometry.Point(point_coordinate)  
         sample = image.sample(region=ee_point, scale=scale).first().getInfo()
         samplesdf = []
@@ -35,27 +76,79 @@ class GEEdem(GEEDataDownloader):
 
     @property
     def list_of_products(self):
+        """
+        Available DEM products.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping product keys to their GEE asset IDs.
+        """
         return {
             'nasadem': "NASA/NASADEM_HGT/001",
             'cgiardem': "CGIAR/SRTM90_V4"
         }
         
-    def initialize_query(self, dem_product: str = 'nasadem'):
+    def initialize_query(self, dem_product: str = "nasadem") -> ee.Image:
         """
-        function to inisitalize the query
+        Initialize DEM query and compute derived terrain metrics.
+
+        Parameters
+        ----------
+        dem_product : str, optional
+            One of the available DEM products. Default is "nasadem".
+
+        Returns
+        -------
+        ee.Image
+            Elevation image with added slope, aspect, and TPI bands.
+
+        Notes
+        -----
+        - TPI is computed as elevation minus focal mean (5-pixel square kernel).
+        - Image is clipped to the ADM0 boundary of the selected country.
         """
+        if dem_product not in self.list_of_products:
+            raise ValueError(
+                f"DEM product '{dem_product}' not recognized. "
+                f"Choose from {list(self.list_of_products.keys())}."
+            )
             
         self.query = ee.Image(self.list_of_products[dem_product]).select('elevation')
 
         self.query = self.query.clip(self.country_filter)
         slope = ee.Terrain.slope(self.query)
         aspect = ee.Terrain.aspect(self.query)
+        tpi = self.query.select('elevation').subtract(self.query.select('elevation').focalMean(5, 'square'))
+        tpi = tpi.rename('tpi')
         
-        self.query = self.query.addBands(slope).addBands(aspect)
+        self.query = self.query.addBands(slope).addBands(aspect).addBands(tpi)
         
         return self.query
 
-    def download_data(self, raster_data, output_fn,  scale = 250):
+    def download_data(self,
+        raster_data: ee.Image,
+        output_fn: str,
+        scale: int = 250
+    ) -> None:
+        """
+        Download DEM raster data as a GeoTIFF.
+
+        Parameters
+        ----------
+        raster_data : ee.Image
+            The image to export.
+        output_fn : str
+            File path where the downloaded GeoTIFF will be saved.
+        scale : int, optional
+            Spatial resolution in meters. Default is 250.
+
+        Raises
+        ------
+        ValueError
+            If `_adm_filter` has not been initialized.
+        """
+        
         raster_data = raster_data.reproject(crs="EPSG:4326", scale=scale)
         url = raster_data.getDownloadURL({
         'scale': scale,

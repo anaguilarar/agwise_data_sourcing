@@ -1,0 +1,25 @@
+GENERAL_SETTINGS:
+  ee_project_name: ee-anaguilarar
+  output_path: runs
+  use_case: null
+
+DATA_DOWNLOAD:
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kakamega
+  ADM2_NAME: null 
+  product: MOD13Q1
+  starting_date: '2022-06-01'
+  ending_date: '2023-07-01'
+  adm_level: 'ADM1'
+  scale: 250
+  n_workers: 5
+  band: NDVI
+
+
+PREPROCESSING:
+  data_filling: True
+  sg_smoothing: True
+  sg_window: 3
+  crop_mask: True
+  crop_mask_product: 'ESA'
+  

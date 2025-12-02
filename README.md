@@ -19,11 +19,15 @@ The tools are intended for researchers who require analysis-ready geospatial dat
 ├── GEEMODIS_data_download.ipynb
 ├── GEESoilGrids_data_download.ipynb
 ├── GEEElevation_data_download.ipynb
+├── download_dem.ipynb
+├── download_modis.ipynb
+├── download_soildata.ipynb
 ├── README.md
 ├── gee_datasets
 │   ├── __init__.py
 │   ├── gee_data.py
 │   ├── dem.py
+│   ├── modis.py
 │   ├── soil.py
 │   └── processing_funs.py
 └── utils
@@ -127,6 +131,45 @@ Run from terminal
 ``` Bash
 python download_dem.py -config yaml_configurations/dem_data_download.yaml
 ```
+
+*   **MODIS Download**
+
+YAML configuration file:
+
+``` Yaml
+GENERAL_SETTINGS:
+  ee_project_name: ee-anaguilarar
+  output_path: runs
+  use_case: null
+
+DATA_DOWNLOAD:
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kakamega
+  ADM2_NAME: null 
+  product: MOD13Q1
+  starting_date: '2022-06-01'
+  ending_date: '2023-07-01'
+  adm_level: 'ADM1'
+  scale: 250
+  n_workers: 5
+  band: NDVI
+
+
+PREPROCESSING:
+  data_filling: True
+  sg_smoothing: True
+  sg_window: 3
+  crop_mask: True
+  crop_mask_product: 'ESA'
+
+```
+Run from terminal
+
+``` Bash
+python download_modis.py -config yaml_configurations/modis_data_download.yaml
+```
+
+
 
 ## Dependencies
 
