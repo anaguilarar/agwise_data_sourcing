@@ -6,7 +6,7 @@ The tools are intended for researchers who require analysis-ready geospatial dat
 
 
 <p align="center">
-  <img src="images/workflow.png" alt="Workflow of the soil and dem process" width="40%">
+  <img src="images/workflow.png" alt="Workflow of the soil and dem process" width="80%">
   <br>
   <em>Figure 1. Workflow</em>
 </p>
