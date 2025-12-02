@@ -75,7 +75,7 @@ YAML configuration file:
 
 ``` Yaml
 GENERAL_SETTINGS:
-  ee_project_name: ee-anaguilarar
+  ee_project_name: YOUR-GEE-PROJECT
   donwnload_data_cube: False
   donwnload_coordinatedata_asdssat: False
   output_path: runs
@@ -113,7 +113,7 @@ YAML configuration file:
 
 ``` Yaml
 GENERAL_SETTINGS:
-  ee_project_name: ee-anaguilarar
+  ee_project_name: YOUR-GEE-PROJECT
   donwnload_as_raster: True
   donwnload_coordinatedata: False
   output_path: runs
@@ -138,7 +138,7 @@ YAML configuration file:
 
 ``` Yaml
 GENERAL_SETTINGS:
-  ee_project_name: ee-anaguilarar
+  ee_project_name: YOUR-GEE-PROJECT
   output_path: runs
   use_case: null
 
