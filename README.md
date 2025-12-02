@@ -1,10 +1,16 @@
 # Ag-Wise Data Sourcing: MODIS/VIIRS Time Series, SoilGrids, and Digital Elevation Model (DEM) Downloader
 
-## Overview
-
 This repository provides a Python-based toolkit for downloading, processing, and visualizing vegetation index (VI) time series from MODIS and VIIRS satellite imagery, along with soil property data from SoilGrids and terrain attributes derived from a digital elevation model (DEM). All data acquisition is performed using the Google Earth Engine (GEE) platform.
 
 The tools are intended for researchers who require analysis-ready geospatial datasets for applications such as crop monitoring and crop modeling.
+
+
+<p align="center">
+  <img src="images/workflow.png" alt="Workflow of the soil and dem process" width="40%">
+  <br>
+  <em>Figure 1. Workflow</em>
+</p>
+
 
 ### Repository Structure
 
