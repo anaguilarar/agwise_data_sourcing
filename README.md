@@ -44,6 +44,30 @@ The tools are intended for researchers who require analysis-ready geospatial dat
 *   `utils/plots.py`: Provides helper functions for plotting the time series data.
 
 
+## Installation
+
+Follow the following code to install and configure the Ag-Wise Data Sourcing toolkit.
+
+``` Bash
+git clone https://github.com/anaguilarar/agwise_data_sourcing.git
+cd agwise_data_sourcing
+
+conda create -n agwise python=3.11
+conda activate agwise
+
+pip install -r requirements.txt
+
+earthengine authenticate
+
+```
+
+This project requires the following Python libraries:
+*   `earthengine-api`
+*   `pandas`
+*   `matplotlib`
+*   `geemap`
+*   `jupyter`
+
 ## Features
 
 *   **MODIS/VIIRS Data Download**: Download VI data (e.g., NDVI) from MODIS and VIIRS products for a specified country and time range.
@@ -170,12 +194,3 @@ python download_modis.py -config yaml_configurations/modis_data_download.yaml
 ```
 
 
-
-## Dependencies
-
-This project requires the following Python libraries:
-*   `earthengine-api`
-*   `pandas`
-*   `matplotlib`
-*   `geemap`
-*   `jupyter`
