@@ -1,8 +1,9 @@
 GENERAL_SETTINGS:
   ee_project_name: ee-anaguilarar
   donwnload_data_cube: False
-  donwnload_coordinatedata_asdssat: True
+  donwnload_coordinatedata_asdssat: False
   output_path: runs
+  donwnload_area_asdssat: True
 
 DATA_DOWNLOAD:
   ADM0_NAME: Kenya
@@ -15,6 +16,7 @@ DATA_DOWNLOAD:
   output_path: soil.nc
   adm_level: 'ADM1'
   scale: 250
+  n_workers: 5
 
 DSSAT_process:
   soil_properties: ['bdod', 'cec', 'cfvo', 'clay', 'sand', 'silt', 'nitrogen', 'soc', 'phh2o', 'wv0010', 'wv0033', 'wv1500']

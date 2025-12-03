@@ -4,6 +4,8 @@ from pathlib import Path
 import ee
 import os
 import sys
+from tqdm import tqdm
+import concurrent.futures
 
 import yaml
 import numpy as np
@@ -27,6 +29,20 @@ def get_soil_data_as_table(data_downloader, coordinate, soil_properties, depths)
             df[column_name] = df[column_name] / 10
     
     return df
+
+def export_coordinate_referenceasdssat(data_downloader,  coordinate_id, coordinate, soil_properties, depths, soil_id, output_path, output_fn = 'SOL', site = 'AFR'):
+    from crop_modeling.dssat.files_export import from_soil_to_dssat
+    ind_pixel_path= os.path.join(output_path, str(coordinate_id))
+    
+    if not os.path.exists(ind_pixel_path): os.mkdir(ind_pixel_path)
+    
+    soil_df = get_soil_data_as_table( data_downloader, coordinate, soil_properties, depths)
+    
+    from_soil_to_dssat(soil_df, 
+                    outputpath = ind_pixel_path, 
+                    outputfn = output_fn, soil_id=soil_id, 
+                    country=data_downloader.country.title(), site = site)
+    
 
 def export_dssat_table(data_downloader, coordinate, soil_properties, depths, soil_id, output_path, output_fn = 'SOL', site = 'AFR'):
     from crop_modeling.dssat.files_export import from_soil_to_dssat
@@ -147,16 +163,63 @@ def main(config_path):
                         output_path = config_dict['GENERAL_SETTINGS']['output_path'],
                         output_fn = config_dict['DSSAT_process']['output_fn'],
                         site = 'AFR')
+        
+    if config_dict['GENERAL_SETTINGS'].get('donwnload_area_asdssat', False):
+        
+        if not os.path.exists(config_dict['GENERAL_SETTINGS']['output_path']): os.makedirs(config_dict['GENERAL_SETTINGS']['output_path'])
+        output_dir = config_dict['GENERAL_SETTINGS']['output_path']
+        max_workers = config_dict['DATA_DOWNLOAD'].get('n_workers', 5)
+        ##create raster ref
+        soil_property = 'sand'
+        data_downloader.initialize_query(soil_property, depths= ['0_5'])
+        adm_level = config_dict['DATA_DOWNLOAD']['adm_level']
+        feature_name = config_dict['DATA_DOWNLOAD'][f'{adm_level}_NAME']
+        soil_image = data_downloader.get_adm_level_data(adm_level=adm_level, feature_name = feature_name)
+        fn = os.path.join(output_dir, soil_property + '.tif')
+        
+        data_downloader.download_data(soil_image, fn, scale = 1000)
+        
+        dataref = rio.open_rasterio(os.path.join(output_dir, f'{soil_property}.tif'))
+        
+        dataref.isel(band = 0).plot()
+
+        xrmask = dataref.notnull()
+        xgrid, ygrid = np.meshgrid(dataref.x,dataref.y)
+        xgrid = np.where(xrmask.values,xgrid,np.nan).flatten()
+        ygrid = np.where(xrmask.values,ygrid,np.nan).flatten()
+
+        pxswithdata = np.where(~np.isnan(ygrid))[0]
+        
+        with tqdm(total=len(pxswithdata)) as pbar:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_tr ={executor.submit(export_coordinate_referenceasdssat, data_downloader, 
+                        coordinate_id = idpx,
+                        coordinate = [xgrid[pxswithdata[idpx]], ygrid[pxswithdata[idpx]]], 
+                        soil_properties = config_dict['DSSAT_process']['soil_properties'], 
+                        depths = config_dict['DATA_DOWNLOAD']['depths'], 
+                        soil_id = config_dict['DSSAT_process']['soil_id'], 
+                        output_path = config_dict['GENERAL_SETTINGS']['output_path'],
+                        output_fn = config_dict['DSSAT_process']['output_fn'],
+                        site = 'AFR'): (idpx) for idpx in pxswithdata}
+
+                for future in concurrent.futures.as_completed(future_to_tr):
+                    idpx = future_to_tr[future]
+                    try:
+                        future.result()
+                            
+                    except Exception as exc:
+                            print(f"Request for treatment {idpx} generated an exception: {exc}")
+                    pbar.update(1)
                     
 if __name__ == '__main__':
     print('''\
       
-      ==============================================
-      |                                            |
-      |           AGWISE DATA SOURCING             |    
-      |               GEESOILData                  |
-      |              Crop Modeling                 |
-      ==============================================      
+            ============================================
+            |                                          |
+            |           AGWISE DATA SOURCING           |    
+            |               GEESOILData                |
+            |              Crop Modeling               |
+            ============================================      
       ''')
 
     args = sys.argv[1:]

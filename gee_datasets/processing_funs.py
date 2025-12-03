@@ -73,6 +73,10 @@ def fill_gaps_linear(collection, band):
 
     return collection.map(interp)
 
+def assign_str_date(img):
+    eedate = ee.Date(img.get('system:time_start'))
+    strdate = eedate.format('YYYY_MM_dd')
+    return img.set('system:id', strdate)
 
 def smooth_ts_using_savitsky_golay_modis(
     img_collection,
@@ -136,9 +140,10 @@ def smooth_ts_using_savitsky_golay_modis(
             }
         )
 
-        return (smoothed.rename(band + '_smooth')
+        return (smoothed.rename(band)
                 .set('system:time_start', ref.get('system:time_start')))
 
     sg_series = ee.List(runLength.map(applySG))
 
-    return ee.ImageCollection(sg_series)
+    sgcollection = ee.ImageCollection(sg_series)
+    return sgcollection.map(assign_str_date)

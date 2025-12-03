@@ -1,8 +1,16 @@
-# Ag-Wise Data Sourcing: MODIS/VIIRS Time Series and SoilGrids Downloader 
+# Ag-Wise Data Sourcing: MODIS/VIIRS Time Series, SoilGrids, and Digital Elevation Model (DEM) Downloader
 
-## Overview
+This repository provides a Python-based toolkit for downloading, processing, and visualizing vegetation index (VI) time series from MODIS and VIIRS satellite imagery, along with soil property data from SoilGrids and terrain attributes derived from a digital elevation model (DEM). All data acquisition is performed using the Google Earth Engine (GEE) platform.
 
-This repository provides a Python-based toolkit for downloading, processing, and visualizing vegetation index (VI) time series data from MODIS and VIIRS satellite imagery, as well as soil property data from SoilGrids, using the Google Earth Engine (GEE) platform. It is designed to facilitate the acquisition of analysis-ready data for agricultural applications, such as crop monitoring and crop modeling.
+The tools are intended for researchers who require analysis-ready geospatial datasets for applications such as crop monitoring and crop modeling.
+
+
+<p align="center">
+  <img src="images/workflow.png" alt="Workflow of the soil and dem process" width="80%">
+  <br>
+  <em>Figure 1. Workflow</em>
+</p>
+
 
 ### Repository Structure
 
@@ -10,10 +18,17 @@ This repository provides a Python-based toolkit for downloading, processing, and
 .
 ├── GEEMODIS_data_download.ipynb
 ├── GEESoilGrids_data_download.ipynb
+├── GEEElevation_data_download.ipynb
+├── download_dem.ipynb
+├── download_modis.ipynb
+├── download_soildata.ipynb
 ├── README.md
 ├── gee_datasets
 │   ├── __init__.py
 │   ├── gee_data.py
+│   ├── dem.py
+│   ├── modis.py
+│   ├── soil.py
 │   └── processing_funs.py
 └── utils
     └── plots.py
@@ -21,10 +36,37 @@ This repository provides a Python-based toolkit for downloading, processing, and
 
 *   `GEEMODIS_data_download.ipynb`: A Jupyter Notebook explaining how to use the tools for downloading MODIS/VIIRS data.
 *   `GEESoilGrids_data_download.ipynb`: A Jupyter Notebook explaining how to use the tools for downloading SoilGrids data.
-*   `gee_datasets/gee_data.py`: Contains the core classes (`GEEMODIS`, `GEESoilGrids`, `GEECropMask`) for interacting with Google Earth Engine and downloading data.
+*   `GEEElevation_data_download.ipynb`: A Jupyter Notebook explaining how to use the tools for downloading digital elevation data.
+*   `gee_datasets/gee_data.py`: Contains the core classes (`GEEDataDownloader`) for interacting with Google Earth Engine and downloading data.
+*   `gee_datasets/dem.py`:  DEM-specific tools for extracting elevation, slope, aspect, and other terrain metrics.
+*   `gee_datasets/soil.py`:  SoilGrids download tools and utilities.
 *   `gee_datasets/processing_funs.py`: Includes functions for time series processing, such as gap filling and smoothing.
 *   `utils/plots.py`: Provides helper functions for plotting the time series data.
 
+
+## Installation
+
+Follow the following code to install and configure the Ag-Wise Data Sourcing toolkit.
+
+``` Bash
+git clone https://github.com/anaguilarar/agwise_data_sourcing.git
+cd agwise_data_sourcing
+
+conda create -n agwise python=3.11
+conda activate agwise
+
+pip install -r requirements.txt
+
+earthengine authenticate
+
+```
+
+This project requires the following Python libraries:
+*   `earthengine-api`
+*   `pandas`
+*   `matplotlib`
+*   `geemap`
+*   `jupyter`
 
 ## Features
 
@@ -38,54 +80,117 @@ This repository provides a Python-based toolkit for downloading, processing, and
 *   *   **Datacube Creation**: Create a NetCDF datacube from multiple downloaded soil properties.
 *   *   **Convert to DSSAT format type file**: Create a file that can be read using DSSAT process base model.
 
+*   **Digital Elevation Model (DEM) and Terrain Derivatives**: Download terrain variables derived from DEMs, such as:
+    *   Elevation
+    *   Slope
+    *   Aspect
+
 *   **Visualization**: Plot raw and processed time series data, and visualize masked data on an interactive map using `geemap`.
 
 
-## Usage
 
-The primary way to use this repository is through the `GEEMODIS_data_download.ipynb` notebook.
+## Usage example using Command-Line (for Automation)
 
-1.  **Open the notebook**: Open `GEEMODIS_data_download.ipynb` in a Jupyter environment.
-2.  **Configure the download**: Modify the `configuration` dictionary at the beginning of the notebook to specify your area of interest, the desired GEE product, and the date range.
-3.  **Run the cells**: Execute the cells in the notebook to download, process, and visualize the data.
+There are examples that uses CLI and YAML files for setting configurations. These examples can be executed through the terminal.
 
-## Configuration
+*   **SoilGrids Download**
 
-The `configuration` dictionary in the notebook has the following structure:
+YAML configuration file:
 
-```python
-configuration = {
-    'GENERAL_SETTINGS':{
-      'ee_project_name': 'your-ee-project-name'
-      },
-    'PREPROCESSING':{
-        'crop_mask': True,
-        'crop_mask_product': 'ESA' # or 'DYNAMICWORLD'
-    },
-    'DATA_DOWNLOAD':
-     {
-      'ADM0_NAME': 'Kenya',
-      'ADM1_NAME': 'Coast',
-      'ADM2_NAME': None,
-      'product': 'MOD13Q1', # e.g., 'MYD13Q1', 'MOD13A2', 'VNP13A1'
-      'starting_date': '2023-01-01',
-      'ending_date': '2023-12-01',
-    }
-}
+``` Yaml
+GENERAL_SETTINGS:
+  ee_project_name: YOUR-GEE-PROJECT
+  donwnload_data_cube: False
+  donwnload_coordinatedata_asdssat: False
+  output_path: runs
+  donwnload_area_asdssat: True
+
+DATA_DOWNLOAD:
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kericho
+  ADM2_NAME: null
+  property: sand
+  properties: ['bdod', 'cec', 'cfvo', 'clay', 'sand', 'silt', 'nitrogen', 'soc', 'phh2o', 'wv0010', 'wv0033', 'wv1500']
+  depths: ['0_5', '5_15', '15_30', '30_60', '60_100', '100_200']
+  coordinate: [37.8, -1.4]
+  output_path: soil.nc
+  adm_level: 'ADM1'
+  scale: 250
+  n_workers: 5
+
+DSSAT_process:
+  soil_properties: ['bdod', 'cec', 'cfvo', 'clay', 'sand', 'silt', 'nitrogen', 'soc', 'phh2o', 'wv0010', 'wv0033', 'wv1500']
+  soil_id: 'TRAN00001'
+  output_fn: 'SOL'
+  dssat_processor_path: 'D:/OneDrive - CGIAR/scripts/'
+
+```
+Run from terminal
+
+``` Bash
+python download_soildata.py -config yaml_configurations/soil_data_download.yaml
 ```
 
-*   `ee_project_name`: Your Google Earth Engine project name.
-*   `crop_mask`: Whether to apply a crop mask.
-*   `crop_mask_product`: The crop mask product to use ('ESA' or 'DYNAMICWORLD').
-*   `ADM0_NAME`: The country name.
-*   `product`: The MODIS/VIIRS product to use.
-*   `starting_date` / `ending_date`: The time period for the data query.
+*   **DEM Download**
 
-## Dependencies
+YAML configuration file:
 
-This project requires the following Python libraries:
-*   `earthengine-api`
-*   `pandas`
-*   `matplotlib`
-*   `geemap`
-*   `jupyter`
+``` Yaml
+GENERAL_SETTINGS:
+  ee_project_name: YOUR-GEE-PROJECT
+  donwnload_as_raster: True
+  donwnload_coordinatedata: False
+  output_path: runs
+
+DATA_DOWNLOAD:
+  source: nasadem
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kisumu
+  coordinate: [37.8, -1]
+  adm_level: 'ADM1'
+  scale: 250
+```
+Run from terminal
+
+``` Bash
+python download_dem.py -config yaml_configurations/dem_data_download.yaml
+```
+
+*   **MODIS Download**
+
+YAML configuration file:
+
+``` Yaml
+GENERAL_SETTINGS:
+  ee_project_name: YOUR-GEE-PROJECT
+  output_path: runs
+  use_case: null
+
+DATA_DOWNLOAD:
+  ADM0_NAME: Kenya
+  ADM1_NAME: Kakamega
+  ADM2_NAME: null 
+  product: MOD13Q1
+  starting_date: '2022-06-01'
+  ending_date: '2023-07-01'
+  adm_level: 'ADM1'
+  scale: 250
+  n_workers: 5
+  band: NDVI
+
+
+PREPROCESSING:
+  data_filling: True
+  sg_smoothing: True
+  sg_window: 3
+  crop_mask: True
+  crop_mask_product: 'ESA'
+
+```
+Run from terminal
+
+``` Bash
+python download_modis.py -config yaml_configurations/modis_data_download.yaml
+```
+
+
