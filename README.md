@@ -122,7 +122,7 @@ DSSAT_process:
   soil_properties: ['bdod', 'cec', 'cfvo', 'clay', 'sand', 'silt', 'nitrogen', 'soc', 'phh2o', 'wv0010', 'wv0033', 'wv1500']
   soil_id: 'TRAN00001'
   output_fn: 'SOL'
-  dssat_processor_path: 'D:/OneDrive - CGIAR/scripts/'
+  dssat_processor_path: '/scripts/'
 
 ```
 Run from terminal
