@@ -6,7 +6,7 @@ The tools are intended for researchers who require analysis-ready geospatial dat
 
 
 <p align="center">
-  <img src="images/workflow.png" alt="Workflow of the soil and dem process" width="80%">
+  <img src="images/workflow.png" alt="Workflow of the soil and dem process" width="90%">
   <br>
   <em>Figure 1. Workflow</em>
 </p>
@@ -26,6 +26,7 @@ The tools are intended for researchers who require analysis-ready geospatial dat
 ├── gee_datasets
 │   ├── __init__.py
 │   ├── gee_data.py
+│   ├── climate.py
 │   ├── dem.py
 │   ├── modis.py
 │   ├── soil.py
@@ -38,6 +39,7 @@ The tools are intended for researchers who require analysis-ready geospatial dat
 *   `GEESoilGrids_data_download.ipynb`: A Jupyter Notebook explaining how to use the tools for downloading SoilGrids data.
 *   `GEEElevation_data_download.ipynb`: A Jupyter Notebook explaining how to use the tools for downloading digital elevation data.
 *   `gee_datasets/gee_data.py`: Contains the core classes (`GEEDataDownloader`) for interacting with Google Earth Engine and downloading data.
+*   `gee_datasets/climate.py`:  Climate tools for extracting daily meteorological information.
 *   `gee_datasets/dem.py`:  DEM-specific tools for extracting elevation, slope, aspect, and other terrain metrics.
 *   `gee_datasets/soil.py`:  SoilGrids download tools and utilities.
 *   `gee_datasets/processing_funs.py`: Includes functions for time series processing, such as gap filling and smoothing.
