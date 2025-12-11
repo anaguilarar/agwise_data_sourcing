@@ -52,12 +52,20 @@ Follow the following code to install and configure the Ag-Wise Data Sourcing too
 git clone https://github.com/anaguilarar/agwise_data_sourcing.git
 cd agwise_data_sourcing
 
-conda create -n agwise python=3.11
+conda create -n agwise python=3.10
 conda activate agwise
 
 pip install -r requirements.txt
 
 earthengine authenticate
+
+```
+
+*Optional*: you can intall the module to transform soil data into the DSSAT format
+
+``` Bash
+git clone https://github.com/anaguilarar/WeatherSoilDataProcessor.git
+pip install -r WeatherSoilDataProcessor/requirements.txt
 
 ```
 
@@ -194,3 +202,88 @@ python download_modis.py -config yaml_configurations/modis_data_download.yaml
 ```
 
 
+## Using the code in R
+The scripts can also be executed from R using the reticulate package. To run the script in R, it is needed to indicate the conda enviroment which previously created (check Intallation section). Then you will need to set the working directory on the github repository clone.
+
+``` R
+
+rm(list = ls())
+
+install.packages('reticulate')
+library(reticulate)
+
+## add the create enviorment in conda
+Sys.setenv(RETICULATE_CONDA = "/opt/conda/lib/conda")
+use_condaenv("agwise", required = TRUE)
+
+## check the configuration
+py_config()
+
+# cghange the directory
+setwd('/home/jovyan/agwise-datasourcing/dataops/agwise_data_sourcing/')
+
+# run the script
+system('/home/jovyan/.conda-envs/agwise/bin/python download_dem.py -config yaml_configurations/dem_data_download.yaml')
+
+
+```
+
+If successful, you will see output similar to:
+
+``` TXT
+
+            ========================================
+            |                                      |
+            |         AGWISE DATA SOURCING         |    
+            |               GEEdem                 |
+            |                                      |
+            ========================================      
+      
+yaml_configurations/dem_data_download.yaml
+-------> Starting:  yaml_configurations/dem_data_download.yaml
+250
+data will be processed for: Kisumu
+-------> DEM data sownloaded in:  runs/kisumu_250.tif
+
+```
+### Editing YAML Configurations from R
+
+In addition to running the Ag-Wise Data Sourcing tools from the terminal, it is also possible to modify and execute YAML configuration files directly from R.
+
+``` R
+library(yaml)
+library(reticulate)
+Sys.setenv(RETICULATE_CONDA = "/opt/conda/lib/conda")
+use_condaenv("agwise", required = TRUE)
+
+# Set working directory to the cloned repository
+setwd('/home/jovyan/agwise-datasourcing/dataops/agwise_data_sourcing/')
+
+# Load the YAML configuration file: 'yaml_configurations/dem_data_download.yaml'
+config_data <- read_yaml("yaml_configurations/dem_data_download.yaml")
+
+# Modify the parameter of interest in this case as example the county
+config_data$DATA_DOWNLOAD$ADM1_NAME = 'Siaya'
+# export the file 
+write_yaml(config_data, "yaml_configurations/dem_data_download_Siaya.yaml")
+
+# run the code
+system('/home/jovyan/.conda-envs/agwise/bin/python download_dem.py -config yaml_configurations/dem_data_download_Siaya.yaml')
+
+```
+
+``` TXT
+            ========================================
+            |                                      |
+            |         AGWISE DATA SOURCING         |    
+            |               GEEdem                 |
+            |                                      |
+            ========================================      
+      
+yaml_configurations/dem_data_download_Siaya.yaml
+-------> Starting:  yaml_configurations/dem_data_download_Siaya.yaml
+250
+data will be processed for: Siaya
+-------> DEM data sownloaded in:  runs/siaya_250.tif
+
+```
