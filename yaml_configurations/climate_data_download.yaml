@@ -1,0 +1,23 @@
+GENERAL_SETTINGS:
+  ee_project_name: ee-diegoagudelo30-2
+  output_path: runs          # carpeta base donde se guardará todo
+  use_case: null             # opcional
+
+DATA_DOWNLOAD:
+  product: chirps            # "chirps" o "agera5"
+  variable: precip           # precip, tmin, tmax, tmean, solrad, rh06, rh15
+
+  # lista de puntos [lon, lat]
+  points:
+    - [34.4571, -0.5274]
+    - [34.1119, 0.4604]
+
+  years: [2022, 2023]        # [año_inicio, año_fin]
+  window_mmdd: ["06-01", "07-01"]   # ["MM-DD", "MM-DD"]
+
+  temp_target: daily         # "daily" o "monthly"
+  temp_agg: sum              # "sum", "mean", "min" o "max"
+
+  # Opcionales, con defaults razonables en el .py
+  scale: 5000                # en metros
+  max_workers: 5
