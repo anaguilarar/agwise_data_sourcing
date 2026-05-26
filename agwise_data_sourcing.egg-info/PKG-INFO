@@ -1,3 +1,54 @@
+Metadata-Version: 2.4
+Name: agwise-data-sourcing
+Version: 0.1.0
+Summary: Python toolkit for downloading and processing geospatial datasets (MODIS/VIIRS, SoilGrids, DEM, Climate) via Google Earth Engine for agricultural applications
+Author-email: Andres Aguilar <andres.aguilar@cgiar.org>
+License: MIT
+Project-URL: Homepage, https://github.com/anaguilarar/agwise_data_sourcing
+Project-URL: Repository, https://github.com/anaguilarar/agwise_data_sourcing
+Project-URL: Issues, https://github.com/anaguilarar/agwise_data_sourcing/issues
+Keywords: google-earth-engine,geospatial,agriculture,MODIS,SoilGrids,remote-sensing,climate,DEM
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering :: GIS
+Classifier: Intended Audience :: Science/Research
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: earthengine-api>=1.0.0
+Requires-Dist: geemap>=0.34.0
+Requires-Dist: geopandas>=1.0.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: numpy<2.3,>=1.24.0
+Requires-Dist: xarray>=2024.1.0
+Requires-Dist: rasterio>=1.3.0
+Requires-Dist: rioxarray>=0.15.0
+Requires-Dist: scipy>=1.10.0
+Requires-Dist: matplotlib>=3.7.0
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: omegaconf>=2.3.0
+Requires-Dist: tqdm>=4.65.0
+Requires-Dist: netCDF4>=1.6.0
+Requires-Dist: shapely>=2.0.0
+Requires-Dist: seaborn>=0.12.0
+Requires-Dist: requests>=2.28.0
+Requires-Dist: pillow>=9.0.0
+Requires-Dist: soilgrids>=0.1.4
+Requires-Dist: rosetta-soil>=0.1.2
+Requires-Dist: zarr>=2.16.0
+Requires-Dist: numba<0.62,>=0.57.0
+Requires-Dist: llvmlite<0.45,>=0.44.0
+Provides-Extra: dssat
+Requires-Dist: DSSATTools>=2.1.0; extra == "dssat"
+Provides-Extra: notebook
+Requires-Dist: notebook>=7.0.0; extra == "notebook"
+Provides-Extra: full
+Requires-Dist: DSSATTools>=2.1.0; extra == "full"
+Requires-Dist: notebook>=7.0.0; extra == "full"
+
 # Ag-Wise Data Sourcing: MODIS/VIIRS Time Series, SoilGrids, and Digital Elevation Model (DEM) Downloader
 
 This repository provides a Python-based toolkit for downloading, processing, and visualizing vegetation index (VI) time series from MODIS and VIIRS satellite imagery, along with soil property data from SoilGrids and terrain attributes derived from a digital elevation model (DEM). All data acquisition is performed using the Google Earth Engine (GEE) platform.

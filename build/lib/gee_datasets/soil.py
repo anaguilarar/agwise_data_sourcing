@@ -8,28 +8,23 @@ import requests
 from .gee_data import GEEDataDownloader
 
 class GEESoilGrids(GEEDataDownloader):
-  def __init__(self, country=None) -> None:
-
+  def __init__(self, country) -> None:
+  
+    self.country = country.lower()
     self._adm_filter = None
     self._global_adiminstrative_data = 'WM/geoLab/geoBoundaries/600/{adm_level}'
 
-    if country is not None:
-      self.country = country.lower()
-      dataset = ee.FeatureCollection(self._global_adiminstrative_data.format(adm_level='ADM0'))
-      self.country_filter = dataset.filter(ee.Filter.eq('shapeName', self.country.title()))
-      count = self.country_filter.size().getInfo()
-      assert count == 1, f'No info for {self.country.title()}'
-    else:
-      self.country = None
-      self.country_filter = None
+    
+    dataset = ee.FeatureCollection(self._global_adiminstrative_data.format(adm_level='ADM0'))
+    self.country_filter = dataset.filter(ee.Filter.eq('shapeName', self.country.title()))
+
+    count = self.country_filter.size().getInfo()
+    assert count == 1, f'No info for {self.country.title()}'
 
   @staticmethod  
   def extract_data_using_coordinate(image, point_coordinate, soil_property, scale = 250):
     ee_point = ee.Geometry.Point(point_coordinate)  
     sample = image.sample(region=ee_point, scale=scale).first().getInfo()
-    if sample is None:
-        print(f'Warning: no data returned for {soil_property} at coordinate {point_coordinate}. Point may be outside coverage.')
-        return pd.DataFrame()
     samplesdf = []
     for k, v in sample['properties'].items():
         if soil_property in ['wv0010', 'wv0033', 'wv1500']:
@@ -72,8 +67,7 @@ class GEESoilGrids(GEEDataDownloader):
 
     self.query = ee.Image(self.list_of_products[soil_property])#.first()
 
-    if self.country_filter is not None:
-      self.query = self.query.clip(self.country_filter)
+    self.query = self.query.clip(self.country_filter)
     if depths is not None:
       if soil_property in ['wv0010', 'wv0033', 'wv1500']:
         band_names = ['val_' + depth_name + 'cm_mean' for depth_name in depths]
@@ -105,8 +99,6 @@ class GEESoilGrids(GEEDataDownloader):
     for soil_property in soil_properties:
         image = self.initialize_query(soil_property, depths= depths)
         dfval = self.extract_data_using_coordinate(image, point_coordinate, soil_property, scale = scale)
-        if dfval.empty:
-            continue
         soildf = dfval if soildf is None else pd.merge(soildf, dfval, on = ['depth', 'x', 'y'])
       
     return soildf

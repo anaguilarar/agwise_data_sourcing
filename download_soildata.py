@@ -113,20 +113,24 @@ def main(config_path):
         config_dict = yaml.safe_load(file)
 
     
-    cm_path = Path(config_dict['DSSAT_process'].get('dssat_processor_path', None))
+    needs_dssat = (
+        config_dict['GENERAL_SETTINGS'].get('donwnload_coordinatedata_asdssat', False) or
+        config_dict['GENERAL_SETTINGS'].get('donwnload_area_asdssat', False)
+    )
 
-    if cm_path is None:
-        path = os.path.abspath(os.path.join(os.getcwd(),'/WeatherSoilDataProcessor'))
-    else:
-        path = os.path.abspath(cm_path / Path('WeatherSoilDataProcessor'))
-    
-    print('dssat processor path: ', path)
-    assert os.path.exists(path), "the dssat processor path does not exist"
-    sys.path.append(path)
+    if needs_dssat:
+        cm_path = Path(config_dict['DSSAT_process'].get('dssat_processor_path', None))
+        if cm_path is None:
+            path = os.path.abspath(os.path.join(os.getcwd(),'/WeatherSoilDataProcessor'))
+        else:
+            path = os.path.abspath(cm_path / Path('WeatherSoilDataProcessor'))
+        print('dssat processor path: ', path)
+        assert os.path.exists(path), "the dssat processor path does not exist"
+        sys.path.append(path)
 
     ee.Initialize(project = config_dict['GENERAL_SETTINGS']['ee_project_name'])
     
-    data_downloader = GEESoilGrids(config_dict['DATA_DOWNLOAD']['ADM0_NAME'])
+    data_downloader = GEESoilGrids(config_dict['DATA_DOWNLOAD'].get('ADM0_NAME', None))
 
     
     if config_dict['GENERAL_SETTINGS']['donwnload_data_cube']:
@@ -153,6 +157,19 @@ def main(config_path):
         pxswithdata = np.where(~np.isnan(ygrid))[0]
         
         
+    if config_dict['GENERAL_SETTINGS'].get('donwnload_coordinatedata', False):
+        if not os.path.exists(config_dict['GENERAL_SETTINGS']['output_path']): os.makedirs(config_dict['GENERAL_SETTINGS']['output_path'])
+        df = get_soil_data_as_table(
+            data_downloader,
+            coordinate = config_dict['DATA_DOWNLOAD']['coordinate'],
+            soil_properties = config_dict['DATA_DOWNLOAD']['properties'],
+            depths = config_dict['DATA_DOWNLOAD']['depths']
+        )
+        output_path = os.path.join(config_dict['GENERAL_SETTINGS']['output_path'], 'soil_data.csv')
+        df.to_csv(output_path, index=False)
+        print(f'-------> Soil data saved to: {output_path}')
+        print(df)
+
     if config_dict['GENERAL_SETTINGS']['donwnload_coordinatedata_asdssat']:
         if not os.path.exists(config_dict['GENERAL_SETTINGS']['output_path']): os.makedirs(config_dict['GENERAL_SETTINGS']['output_path'])
         export_dssat_table(data_downloader, 
