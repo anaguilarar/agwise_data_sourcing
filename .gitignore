@@ -1,3 +1,5 @@
 soil/
 runs/
 dem/
+agwise_data_sourcing.egg-info/
+build/
